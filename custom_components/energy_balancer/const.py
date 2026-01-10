@@ -39,7 +39,7 @@ AREAS = [
     "SYS",
     "TEL",
 ]
-CURRENCIES = ["DKK", "EUR", "NOK", "PLN", "SEK"]
+CURRENCIES = ["BGN", "DKK", "EUR", "NOK", "PLN", "SEK"]
 
 DEFAULT_HORIZON_HOURS = 12
 DEFAULT_MAX_OFFSET = 1.0
@@ -72,6 +72,15 @@ VAT_BY_AREA = {
     "SE2": 0.25,
     "SE3": 0.25,
     "SE4": 0.25,
+}
+
+CURRENCY_UNITS = {
+    "EUR": "€/kWh",
+    "DKK": "DKK/kWh",
+    "NOK": "NOK/kWh",
+    "PLN": "PLN/kWh",
+    "SEK": "SEK/kWh",
+    "BGN": "BGN/kWh",
 }
 
 # Coordinator key

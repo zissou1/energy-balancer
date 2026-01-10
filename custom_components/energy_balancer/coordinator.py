@@ -17,6 +17,7 @@ from homeassistant.util import dt as dt_util
 from .const import (
     AREAS,
     CURRENCIES,
+    CURRENCY_UNITS,
     CONF_AREA,
     CONF_CURRENCY,
     CONF_HORIZON_HOURS,
@@ -144,6 +145,7 @@ class EnergyBalancerCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "slot_ms": slot_ms,
             "current_offset": float(current_offset),
             "current_price": current_price,
+            "currency_unit": CURRENCY_UNITS.get(self.currency, self.currency),
             "offsets_today": raw_today,
             "offsets_tomorrow": raw_tomorrow,
             "prices_today": prices_today,
@@ -387,7 +389,7 @@ class EnergyBalancerCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 Point(
                     p.start_ts,
                     p.end_ts,
-                    (p.value / 10.0) * (1.0 + vat_rate),
+                    round((p.value / 1000.0) * (1.0 + vat_rate), 2),
                 )
                 for p in points
             ]

@@ -44,7 +44,6 @@ class EnergyBalancerPricesSensor(CoordinatorEntity, SensorEntity):
     _attr_name = "Energy Balancer Prices"
     _attr_unique_id = "energy_balancer_prices"
     _attr_icon = "mdi:currency-eur"
-    _attr_native_unit_of_measurement = "ore"
 
     def __init__(self, coordinator):
         super().__init__(coordinator)
@@ -52,6 +51,10 @@ class EnergyBalancerPricesSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self):
         return (self.coordinator.data or {}).get("current_price")
+
+    @property
+    def native_unit_of_measurement(self):
+        return (self.coordinator.data or {}).get("currency_unit")
 
     @property
     def extra_state_attributes(self):
