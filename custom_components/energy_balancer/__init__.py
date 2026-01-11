@@ -37,7 +37,6 @@ async def _update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     _LOGGER.debug("update_listener called entry_id=%s", entry.entry_id)
     coordinator: EnergyBalancerCoordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
     coordinator.reload_from_entry(entry)
-    await coordinator.async_refresh_prices()
     await coordinator.async_request_refresh()
 
 

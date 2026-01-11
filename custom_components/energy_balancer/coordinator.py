@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import date, datetime, time, timedelta
 from functools import partial
 from statistics import mean
+import asyncio
 from typing import Any
 import logging
 
@@ -227,13 +228,31 @@ class EnergyBalancerCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         today = now_local.date()
 
         if startup:
-            startup_deadline = now_local + timedelta(minutes=1)
+            startup_deadline = now_local + timedelta(minutes=2)
             await self._attempt_fetch_with_retry(today, startup_deadline, "today", retry_interval_seconds=10)
         else:
             await self._attempt_fetch_with_retry(today, now_local + timedelta(minutes=1), "today")
 
         if now_local.time() >= time(13, 30):
             tomorrow = today + timedelta(days=1)
+            if startup:
+                # On restart, always retry tomorrow for 1 minute if time is past release.
+                await asyncio.sleep(5)
+                await self._attempt_fetch_with_retry(
+                    tomorrow,
+                    now_local + timedelta(minutes=2),
+                    "tomorrow",
+                    retry_interval_seconds=10,
+                )
+                # After tomorrow succeeds, try today once more in case it missed earlier.
+                await self._attempt_fetch_with_retry(
+                    today,
+                    now_local + timedelta(minutes=2),
+                    "today",
+                    retry_interval_seconds=10,
+                )
+                return
+
             deadline = datetime.combine(today, time(13, 40), tzinfo=self._tz)
             if now_local > deadline:
                 await self._fetch_prices_for_date(tomorrow)
