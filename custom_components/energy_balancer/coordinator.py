@@ -23,6 +23,7 @@ from .const import (
     CONF_HORIZON_HOURS,
     CONF_INCLUDE_VAT,
     CONF_MAX_OFFSET,
+    CONF_NIGHT_CAP,
     CONF_PRICE_ENTITY,
     CONF_STEP_SIZE,
     CONF_SMOOTHING_LEVEL,
@@ -31,6 +32,7 @@ from .const import (
     DEFAULT_HORIZON_HOURS,
     DEFAULT_INCLUDE_VAT,
     DEFAULT_MAX_OFFSET,
+    DEFAULT_NIGHT_CAP,
     DEFAULT_STEP_SIZE,
     DEFAULT_SMOOTHING_LEVEL,
     DOMAIN,
@@ -82,6 +84,7 @@ class EnergyBalancerCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         opts = entry.options or {}
         self.horizon_hours: int = int(opts.get(CONF_HORIZON_HOURS, entry.data.get(CONF_HORIZON_HOURS, DEFAULT_HORIZON_HOURS)))
         self.max_offset: float = float(opts.get(CONF_MAX_OFFSET, entry.data.get(CONF_MAX_OFFSET, DEFAULT_MAX_OFFSET)))
+        self.night_cap: bool = bool(opts.get(CONF_NIGHT_CAP, entry.data.get(CONF_NIGHT_CAP, DEFAULT_NIGHT_CAP)))
         self.step_size: float = float(opts.get(CONF_STEP_SIZE, entry.data.get(CONF_STEP_SIZE, DEFAULT_STEP_SIZE)))
         self.smoothing_level: int = int(opts.get(CONF_SMOOTHING_LEVEL, entry.data.get(CONF_SMOOTHING_LEVEL, DEFAULT_SMOOTHING_LEVEL)))
 
@@ -201,6 +204,14 @@ class EnergyBalancerCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         offsets = [clamp(o, -self.max_offset, self.max_offset) for o in offsets]
 
         # Apply step size snapping after smoothing and clamp again
+        if self.step_size > 0:
+            offsets = [quantize_step(o, self.step_size) for o in offsets]
+            offsets = [clamp(o, -self.max_offset, self.max_offset) for o in offsets]
+
+        # Optional night cap (22:30-05:00 Stockholm time)
+        offsets = self._apply_night_cap(offsets, prices, horizon_slots)
+
+        # Re-apply step size after night cap to keep consistent increments
         if self.step_size > 0:
             offsets = [quantize_step(o, self.step_size) for o in offsets]
             offsets = [clamp(o, -self.max_offset, self.max_offset) for o in offsets]
@@ -438,6 +449,10 @@ class EnergyBalancerCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.horizon_hours = int(value)
         await self.async_refresh()
 
+    async def async_set_night_cap(self, value: bool) -> None:
+        self.night_cap = bool(value)
+        await self.async_refresh()
+
     async def async_stop(self) -> None:
         """Stop any background timers/tasks created by this coordinator.
 
@@ -458,4 +473,43 @@ class EnergyBalancerCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self._retry_unsub()
             self._retry_unsub = None
         return
+
+    def _apply_night_cap(
+        self,
+        offsets: list[float],
+        prices: list[Point],
+        horizon_slots: int,
+    ) -> list[float]:
+        if not self.night_cap or not offsets:
+            return offsets
+
+        night_mask = [self._is_night_slot(p.start_ts) for p in prices]
+        out = offsets[:]
+
+        for i, is_night in enumerate(night_mask):
+            if is_night and out[i] > 0:
+                out[i] = 0.0
+
+        # Rebalance overall sum to keep net energy neutral without per-window oscillations
+        for _ in range(3):
+            total = sum(out)
+            if abs(total) < 1e-6:
+                break
+            adjustable = [
+                j
+                for j in range(len(out))
+                if not night_mask[j] and -self.max_offset < out[j] < self.max_offset
+            ]
+            if not adjustable:
+                break
+            correction = total / len(adjustable)
+            for j in adjustable:
+                out[j] = clamp(out[j] - correction, -self.max_offset, self.max_offset)
+
+        return out
+
+    def _is_night_slot(self, start_ts_ms: int) -> bool:
+        dt_local = datetime.fromtimestamp(start_ts_ms / 1000.0, tz=dt_util.UTC).astimezone(self._tz)
+        t = dt_local.time()
+        return t >= time(22, 30) or t < time(5, 0)
 

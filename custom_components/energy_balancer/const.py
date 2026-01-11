@@ -2,7 +2,7 @@ from __future__ import annotations
 
 DOMAIN = "energy_balancer"
 
-PLATFORMS: list[str] = ["sensor", "number", "select"]
+PLATFORMS: list[str] = ["sensor", "number", "select", "switch"]
 
 CONF_PRICE_ENTITY = "Price Entity"
 CONF_AREA = "area"
@@ -10,6 +10,7 @@ CONF_INCLUDE_VAT = "Include VAT"
 CONF_CURRENCY = "currency"
 CONF_HORIZON_HOURS = "horizon_hours"
 CONF_MAX_OFFSET = "max_offset"
+CONF_NIGHT_CAP = "night_cap"
 CONF_STEP_SIZE = "step_size"
 CONF_SMOOTHING_LEVEL = "smoothing_level"
 
@@ -48,6 +49,7 @@ DEFAULT_SMOOTHING_LEVEL = 1  # 0..10
 DEFAULT_AREA = "SE1"
 DEFAULT_CURRENCY = "SEK"
 DEFAULT_INCLUDE_VAT = False
+DEFAULT_NIGHT_CAP = False
 
 VAT_BY_AREA = {
     "AT": 0.20,
