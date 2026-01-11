@@ -46,7 +46,7 @@ Required:
 
 Sensors:
 - `sensor.energy_balancer_offset`
-  - State: current offset (degC)
+  - State: current offset (°C)
   - Attributes:
     - `slot_ms`
     - `raw_today` / `raw_tomorrow` (offset forecast)
@@ -59,7 +59,7 @@ Sensors:
 Note: There is no separate forecast sensor; use the attributes above for charts.
 
 Helpers:
-- `number.energy_balancer_max_offset` (degC)
+- `number.energy_balancer_max_offset` (°C)
 - `number.energy_balancer_horizon_hours` (hours)
 - `number.energy_balancer_smoothing_level` (0-10)
 - `select.energy_balancer_step_size` (0.1 / 0.5 / 1.0)
@@ -184,11 +184,11 @@ series:
 
 ### Example output
 
-Step size 0.5:
+Step size 0.1:
 
 ![Step size 0.5](images/step_0_5.png)
 
-Step size 0.1:
+Step size 0.5:
 
 ![Step size 0.1](images/step_0_1.png)
 
