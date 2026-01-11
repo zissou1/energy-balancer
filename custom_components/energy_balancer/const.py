@@ -4,10 +4,10 @@ DOMAIN = "energy_balancer"
 
 PLATFORMS: list[str] = ["sensor", "number", "select", "switch"]
 
-CONF_PRICE_ENTITY = "Price Entity"
-CONF_AREA = "area"
+CONF_PRICE_ENTITY = "Nordpool Entity (Current Price)"
+CONF_AREA = "Area"
 CONF_INCLUDE_VAT = "Include VAT"
-CONF_CURRENCY = "currency"
+CONF_CURRENCY = "Currency"
 CONF_HORIZON_HOURS = "horizon_hours"
 CONF_MAX_OFFSET = "max_offset"
 CONF_NIGHT_CAP = "night_cap"
