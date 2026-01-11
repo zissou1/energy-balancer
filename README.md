@@ -65,6 +65,133 @@ Helpers:
 - `select.energy_balancer_step_size` (0.1 / 0.5 / 1.0)
 - `switch.energy_balancer_night_cap` (on/off)
 
+## ApexCharts example
+
+Below is an example ApexCharts card that plots the offset and price series.
+
+```yaml
+type: custom:apexcharts-card
+hours_12: false
+graph_span: 2d
+now:
+  show: true
+  color: "#fe7c0c"
+  label: Nu
+span:
+  start: day
+  offset: "-0h"
+header:
+  show: false
+  title: Energy Balancer – Offset forecast vs price
+  show_states: false
+apex_config:
+  chart:
+    type: area
+  stroke:
+    width: 2
+    curve: smooth
+  markers:
+    size: 0
+  dataLabels:
+    enabled: false
+  fill:
+    type: solid
+    opacity: 0.18
+  grid:
+    strokeDashArray: 0
+    borderColor: rgba(255,255,255,0.10)
+  xaxis:
+    type: datetime
+    axisBorder:
+      show: false
+  yaxis:
+    - id: offset
+      decimalsInFloat: 1
+      tickAmount: 8
+      min: -2
+      max: 2
+    - id: price
+      opposite: true
+      decimalsInFloat: 2
+      tickAmount: 8
+series:
+  - entity: sensor.energy_balancer_offset
+    name: Offset (°C)
+    unit: °C
+    yaxis_id: offset
+    type: area
+    data_generator: >
+      const today = Array.isArray(entity.attributes.raw_today) ?
+      entity.attributes.raw_today : [];
+
+      const tomorrow = Array.isArray(entity.attributes.raw_tomorrow) ?
+      entity.attributes.raw_tomorrow : [];
+
+      // Merge both lists
+      const rows = [...today, ...tomorrow]
+        .filter(r => r && r.start_ts != null && r.value != null)
+        .map(r => [Number(r.start_ts), Number(r.value)]);
+
+      // Sort + de-dup on timestamp (keep last)
+      rows.sort((a,b) => a[0]-b[0]);
+
+      const data = [];
+      for (const p of rows) {
+        if (data.length && data[data.length-1][0] === p[0]) data[data.length-1] = p;
+        else data.push(p);
+      }
+
+      // Break line after last point so it doesn't extend
+      if (data.length) data.push([data[data.length - 1][0] + 15 * 60 * 1000, null]);
+
+      return data;
+    show:
+      in_header: false
+      legend_value: false
+  - entity: sensor.energy_balancer_prices
+    name: Price (SEK)
+    yaxis_id: price
+    type: area
+    data_generator: >
+      const today = Array.isArray(entity.attributes.raw_today) ?
+      entity.attributes.raw_today : [];
+
+      const tomorrow = Array.isArray(entity.attributes.raw_tomorrow) ?
+      entity.attributes.raw_tomorrow : [];
+
+      // Merge both lists
+      const rows = [...today, ...tomorrow]
+        .filter(r => r && r.start_ts != null && r.value != null)
+        .map(r => [Number(r.start_ts), Number(r.value)]);
+
+      // Sort + de-dup on timestamp (keep last)
+      rows.sort((a,b) => a[0]-b[0]);
+
+      const data = [];
+      for (const p of rows) {
+        if (data.length && data[data.length-1][0] === p[0]) data[data.length-1] = p;
+        else data.push(p);
+      }
+
+      // Break line after last point so it doesn't extend
+      if (data.length) data.push([data[data.length - 1][0] + 15 * 60 * 1000, null]);
+
+      return data;
+    show:
+      in_header: false
+      legend_value: false
+```
+
+### Example output
+
+Step size 0.5:
+
+![Step size 0.5](images/step_0_5.png)
+
+Step size 0.1:
+
+![Step size 0.1](images/step_0_1.png)
+
 ## Scheduling and Data Flow
 
 - On startup, the integration fetches today prices and retries every 10 seconds for up to 2 minutes.
