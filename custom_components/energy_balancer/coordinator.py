@@ -229,31 +229,30 @@ class EnergyBalancerCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         if startup:
             startup_deadline = now_local + timedelta(minutes=2)
-            await self._attempt_fetch_with_retry(today, startup_deadline, "today", retry_interval_seconds=10)
+            await self._attempt_fetch_with_retry_blocking(
+                today,
+                startup_deadline,
+                "today",
+                retry_interval_seconds=10,
+            )
         else:
             await self._attempt_fetch_with_retry(today, now_local + timedelta(minutes=1), "today")
 
+        now_local = self._now_stockholm()
         if now_local.time() >= time(13, 30):
-            tomorrow = today + timedelta(days=1)
+            tomorrow = now_local.date() + timedelta(days=1)
             if startup:
-                # On restart, always retry tomorrow for 1 minute if time is past release.
+                # On restart, retry tomorrow after today's fetch completes.
                 await asyncio.sleep(5)
-                await self._attempt_fetch_with_retry(
+                await self._attempt_fetch_with_retry_blocking(
                     tomorrow,
                     now_local + timedelta(minutes=2),
                     "tomorrow",
                     retry_interval_seconds=10,
                 )
-                # After tomorrow succeeds, try today once more in case it missed earlier.
-                await self._attempt_fetch_with_retry(
-                    today,
-                    now_local + timedelta(minutes=2),
-                    "today",
-                    retry_interval_seconds=10,
-                )
                 return
 
-            deadline = datetime.combine(today, time(13, 40), tzinfo=self._tz)
+            deadline = datetime.combine(now_local.date(), time(13, 40), tzinfo=self._tz)
             if now_local > deadline:
                 await self._fetch_prices_for_date(tomorrow)
                 return
@@ -372,6 +371,31 @@ class EnergyBalancerCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 retry_interval_seconds,
             )
             return False
+
+        self.logger.error(
+            "Failed to fetch %s prices before %s",
+            label,
+            deadline_local.isoformat(),
+        )
+        return False
+
+    async def _attempt_fetch_with_retry_blocking(
+        self,
+        target_date: date,
+        deadline_local: datetime,
+        label: str,
+        retry_interval_seconds: int = 60,
+    ) -> bool:
+        deadline_utc = dt_util.as_utc(deadline_local)
+        while True:
+            ok = await self._fetch_prices_for_date(target_date)
+            if ok:
+                await self.async_request_refresh()
+                return True
+
+            if dt_util.utcnow() >= deadline_utc:
+                break
+            await asyncio.sleep(retry_interval_seconds)
 
         self.logger.error(
             "Failed to fetch %s prices before %s",
