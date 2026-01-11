@@ -25,10 +25,20 @@ This integration is GUI-only and uses a Nordpool sensor to locate the Nordpool c
 
 ### HACS
 
-1. Add this repository as a custom repository in HACS (type: Integration).
-2. Install "Energy Balancer".
-3. Restart Home Assistant.
-4. Add the integration via the UI (Settings -> Devices & Services -> Add Integration -> Energy Balancer).
+Energy Balancer is available in HACS (Home Assistant Community Store).
+
+Use this link to open the repository in HACS:
+
+https://my.home-assistant.io/redirect/hacs_repository/?owner=zissou1&repository=energy-balancer&category=integration
+
+Or install manually:
+
+1. Install HACS if you do not have it already.
+2. Open HACS in Home Assistant.
+3. Search for "Energy Balancer".
+4. Click the download button.
+5. Restart Home Assistant.
+6. Add the integration via the UI (Settings -> Devices & Services -> Add Integration -> Energy Balancer).
 
 ### Manual
 
