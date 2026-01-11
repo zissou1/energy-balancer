@@ -1,5 +1,7 @@
 # Energy Balancer (Home Assistant Custom Integration)
 
+Use the offset value from Energy Balancer to shift heating in time and reduce cost: apply the offset in your climate automation to pre-heat when prices are low and ease off when prices are high.
+
 Energy Balancer computes a temperature offset for a heating system based on electricity price variations while keeping total energy neutral over a rolling window. The offset is positive when prices are low (pre-heating) and negative when prices are high (letting temperature float down).
 
 This integration is GUI-only and uses a Nordpool sensor to locate the Nordpool config entry, then calls the Nordpool service to fetch price data.
