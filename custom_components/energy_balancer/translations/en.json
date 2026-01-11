@@ -1,0 +1,33 @@
+{
+  "config": {
+    "title": "Energy Balancer",
+    "step": {
+      "user": {
+        "title": "Energy Balancer",
+        "description": "Configure Energy Balancer",
+        "data": {
+          "Price Entity": "Nordpool sensor entity",
+          "area": "Area",
+          "currency": "Currency",
+          "Include VAT": "Include VAT"
+        }
+      }
+    },
+    "error": {},
+    "abort": {}
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Energy Balancer",
+        "description": "Update configuration",
+        "data": {
+          "Price Entity": "Nordpool sensor entity",
+          "area": "Area",
+          "currency": "Currency",
+          "Include VAT": "Include VAT"
+        }
+      }
+    }
+  }
+}
