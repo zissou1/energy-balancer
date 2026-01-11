@@ -303,14 +303,19 @@ class EnergyBalancerCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         today = self._now_stockholm().date()
         tomorrow = today + timedelta(days=1)
         deadline = datetime.combine(today, time(13, 40), tzinfo=self._tz)
-        await self._attempt_fetch_with_retry(tomorrow, deadline, "tomorrow")
+        await self._attempt_fetch_with_retry_blocking(
+            tomorrow,
+            deadline,
+            "tomorrow",
+            retry_interval_seconds=10,
+        )
         self._schedule_next_tomorrow_fetch()
 
     async def _handle_midnight_roll(self, _now: datetime) -> None:
         self._roll_prices_if_needed()
         today = self._now_stockholm().date()
         if not self._prices_today:
-            await self._attempt_fetch_with_retry(
+            await self._attempt_fetch_with_retry_blocking(
                 today,
                 self._now_stockholm() + timedelta(minutes=1),
                 "today",
