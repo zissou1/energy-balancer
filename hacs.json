@@ -1,0 +1,7 @@
+{
+  "name": "Energy Balancer",
+  "render_readme": true,
+  "domains": ["sensor", "number", "select", "switch"],
+  "iot_class": "calculated",
+  "country": ["SE", "NO", "DK", "FI", "EE", "LV", "LT", "PL", "DE", "FR", "BE", "AT", "NL", "BG"]
+}
