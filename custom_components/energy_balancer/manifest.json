@@ -1,7 +1,7 @@
 {
   "domain": "energy_balancer",
   "name": "Energy Balancer",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "documentation": "https://github.com/zissou1/energy-balancer#readme",
   "issue_tracker": "https://github.com/zissou1/energy-balancer/issues",
   "config_flow": true,
